@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+### IDEs and code editors ###
+.idea/
+.idea_modules/
+.vscode/*
+.vs/
+nbproject/
+atlassian-ide-plugin.xml
+.sass-cache/
+build/
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+images/
+data/
