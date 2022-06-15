@@ -4,6 +4,7 @@ from pprint import pprint
 
 languages = ['Python', 'Java', 'Javascript', 'Ruby' ,'PHP' , 'C++', 'C#']
 
+
 def predict_rub_salary(vacancy):
 	salary = vacancy['salary']
 	if salary:
@@ -15,6 +16,7 @@ def predict_rub_salary(vacancy):
 			return (salary['to'])*0.8
 		elif (salary['to'] is None):
 			return (salary['from'])*1.2			
+	
 		
 def average_salary(vacancies):
 	average_salary = 0
@@ -26,11 +28,6 @@ def average_salary(vacancies):
 			vacancies_processed += 1
 	average_salary = int(average_salary/vacancies_processed)
 	return(vacancies_processed, average_salary)
-
-
-
-
-
 
 
 def get_salary_hh(languages):
