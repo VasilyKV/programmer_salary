@@ -1,9 +1,9 @@
 import collections
 import requests
-from pprint import pprint
-from terminaltables import AsciiTable
+import os
 
-languages = ['Python', 'Java', 'Javascript', 'Ruby' ,'PHP' , 'C++', 'C#']
+from dotenv import load_dotenv
+from terminaltables import AsciiTable
 
 
 def predict_salary(salary_from, salary_to):
@@ -41,20 +41,19 @@ def predict_rub_salary_sj(vacancies):
 	return(vacancies_processed, average_salary)
 
 
-def get_salary_hh(languages):
+def get_salary_hh(languages, pages_number):
 	url = 'https://api.hh.ru/vacancies'
 	payload = {
-			'text' : '',
-			'area' : 1,
-			'period' : 30,
-			'page' : 0
-			}	
+		'text' : '',
+		'area' : 1,
+		'period' : 30,
+		'page' : 0
+	}	
 	languages_stat = {}
 	for language in languages:
 		payload['text'] = f'программист {language}'
 		vacancies = []
 		page = 0
-		pages_number = 10
 		while page < pages_number:
 			payload['page'] = page 
 			response = requests.get(url, params=payload)
@@ -65,16 +64,15 @@ def get_salary_hh(languages):
 			page += 1
 		average_salary = predict_rub_salary_hh(vacancies)
 		language_stat = {
-		"vacancies_found" : response_json['found'],
-		"vacancies_processed": average_salary[0],
-		"average_salary": average_salary[1]
+			'vacancies_found' : response_json['found'],
+			'vacancies_processed': average_salary[0],
+			'average_salary': average_salary[1]
 		}
 		languages_stat[language] = language_stat
 	return(languages_stat)
 
 
-def get_salary_sj(languages):
-	key_sj = 'v3.r.136715645.229b495365993c82076dca1d4673d5143fc5ca03.6431b147f94cb4885f30f18f33878aa21ca9da05'
+def get_salary_sj(languages, key_sj, pages_number):
 	url = 'https://api.superjob.ru/2.0/vacancies/'
 	request_headers = {
 	    'X-Api-App-Id': key_sj
@@ -90,7 +88,6 @@ def get_salary_sj(languages):
 		payload['keyword'] = f'программист {language}'
 		vacancies = []
 		page = 0
-		pages_number = 2
 		more_page = True
 		while page < pages_number and more_page:
 			payload['page'] = page 
@@ -102,9 +99,9 @@ def get_salary_sj(languages):
 			page += 1
 		average_salary = predict_rub_salary_sj(vacancies)
 		language_stat = {
-		"vacancies_found" : response_json['total'],
-		"vacancies_processed": average_salary[0],
-		"average_salary": average_salary[1]
+			'vacancies_found' : response_json['total'],
+			'vacancies_processed': average_salary[0],
+			'average_salary': average_salary[1]
 		}
 		languages_stat[language] = language_stat
 	return(languages_stat)
@@ -115,7 +112,6 @@ def table_print(languages_stat, title):
 		'Вакансий найдено',
 		'Вакансий обработано',
 		'Средняя зарплата'
-
 	]]
 	for language, language_stat in languages_stat.items():
 		table_row = [
@@ -128,6 +124,17 @@ def table_print(languages_stat, title):
 	table = AsciiTable(table_data, title)
 	print(table.table)
 
-table_print(get_salary_hh(languages),'HeadHunter')
-print('')
-table_print(get_salary_sj(languages),'SuperJob')
+
+def main():
+	load_dotenv()
+	key_sj = os.getenv('KEY_SUPERJOB')	
+	languages = os.getenv('LANGUAGES', default='Python').split(', ')
+	pages_number = int(os.getenv('PAGES_NUMBER', default=2))
+
+	table_print(get_salary_hh(languages, pages_number),'HeadHunter-Moscow')
+	print('')
+	table_print(get_salary_sj(languages, key_sj, pages_number),'SuperJob-Moscow')
+
+
+if __name__ == '__main__':
+    main()
