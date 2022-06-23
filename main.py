@@ -26,7 +26,7 @@ def predict_rub_salary_hh(vacancies):
 				salary_sum += vacancy_salary
 				vacancies_processed += 1
 	average_salary = int(salary_sum/vacancies_processed)
-	return(vacancies_processed, average_salary)
+	return vacancies_processed, average_salary
 
 
 def predict_rub_salary_sj(vacancies):
@@ -38,7 +38,7 @@ def predict_rub_salary_sj(vacancies):
 				salary_sum += vacancy_salary
 				vacancies_processed += 1
 	average_salary = int(salary_sum/vacancies_processed)
-	return(vacancies_processed, average_salary)
+	return vacancies_processed, average_salary
 
 
 def get_salary_hh(languages, pages_number):
@@ -58,18 +58,18 @@ def get_salary_hh(languages, pages_number):
 			payload['page'] = page 
 			response = requests.get(url, params=payload)
 			response.raise_for_status()
-			response_json = response.json()
-			pages_number = min(pages_number, response_json['pages'])
-			vacancies += response_json['items']
+			collected_data = response.json()
+			pages_number = min(pages_number, collected_data['pages'])
+			vacancies += collected_data['items']
 			page += 1
-		average_salary = predict_rub_salary_hh(vacancies)
+		vacancies_processed, average_salary = predict_rub_salary_hh(vacancies)
 		language_stat = {
-			'vacancies_found' : response_json['found'],
-			'vacancies_processed': average_salary[0],
-			'average_salary': average_salary[1]
+			'vacancies_found' : collected_data['found'],
+			'vacancies_processed': vacancies_processed,
+			'average_salary': average_salary
 		}
 		languages_stat[language] = language_stat
-	return(languages_stat)
+	return languages_stat
 
 
 def get_salary_sj(languages, key_sj, pages_number):
@@ -93,20 +93,20 @@ def get_salary_sj(languages, key_sj, pages_number):
 			payload['page'] = page 
 			response = requests.get(url, headers=request_headers, params=payload)
 			response.raise_for_status()
-			response_json = response.json()
-			more_page = response_json['more']
-			vacancies += response_json['objects']
+			collected_data = response.json()
+			more_page = collected_data['more']
+			vacancies += collected_data['objects']
 			page += 1
-		average_salary = predict_rub_salary_sj(vacancies)
+		vacancies_processed, average_salary = predict_rub_salary_sj(vacancies)
 		language_stat = {
-			'vacancies_found' : response_json['total'],
-			'vacancies_processed': average_salary[0],
-			'average_salary': average_salary[1]
+			'vacancies_found' : collected_data['total'],
+			'vacancies_processed': vacancies_processed,
+			'average_salary': average_salary
 		}
 		languages_stat[language] = language_stat
 	return(languages_stat)
 
-def table_print(languages_stat, title):
+def print_table(languages_stat, title):
 	table_data = [[
 		'Язык программирования',
 		'Вакансий найдено',
@@ -129,12 +129,14 @@ def main():
 	load_dotenv()
 	key_sj = os.getenv('KEY_SUPERJOB')	
 	languages = os.getenv('LANGUAGES', default='Python').split(', ')
-	pages_number = int(os.getenv('PAGES_NUMBER', default=2))
+	pages_number = int(os.getenv('PAGES_NUMBER', default=1000))
 
-	table_print(get_salary_hh(languages, pages_number),'HeadHunter-Moscow')
+	print_table(get_salary_hh(languages, pages_number),'HeadHunter-Moscow')
 	print('')
-	table_print(get_salary_sj(languages, key_sj, pages_number),'SuperJob-Moscow')
+	print_table(get_salary_sj(languages, key_sj, pages_number),'SuperJob-Moscow')
 
 
 if __name__ == '__main__':
     main()
+
+# , Javascript, Ruby, PHP, C++, C#, Scala
