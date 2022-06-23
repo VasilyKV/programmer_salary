@@ -15,29 +15,25 @@ def predict_salary(salary_from, salary_to):
         return salary_from * 1.2
 
 
-def predict_rub_salary_hh(vacancies):
+def predict_rub_salary(vacancies, website):
     salary_sum = 0
     vacancies_processed = 0
     for vacancy in vacancies:
-        salary = vacancy['salary']
-        if salary:
-            vacancy_salary = predict_salary(salary['from'], salary['to'])
-            if salary['currency'] == 'RUR' and vacancy_salary:
-                salary_sum += vacancy_salary
-                vacancies_processed += 1
-    average_salary = int(salary_sum / vacancies_processed)
-    return vacancies_processed, average_salary
-
-
-def predict_rub_salary_sj(vacancies):
-    salary_sum = 0
-    vacancies_processed = 0
-    for vacancy in vacancies:
-        vacancy_salary = predict_salary(vacancy['payment_from'], vacancy['payment_to'])
-        if vacancy['currency'] == 'rub' and vacancy_salary:
+        if website == 'hh' and vacancy['salary']:
+            payment_from = vacancy['salary']['from']
+            payment_to = vacancy['salary']['to']
+            is_currency_rub = (vacancy['salary']['currency'] == 'RUR')
+        elif website == 'sj':
+            payment_from = vacancy['payment_from']
+            payment_to = vacancy['payment_to']
+            is_currency_rub = (vacancy['currency'] == 'rub')
+        else:
+            continue
+        vacancy_salary = predict_salary(payment_from, payment_to)
+        if vacancy_salary and is_currency_rub:
             salary_sum += vacancy_salary
             vacancies_processed += 1
-    average_salary = int(salary_sum / vacancies_processed)
+    average_salary = int(salary_sum / max(vacancies_processed, 1))
     return vacancies_processed, average_salary
 
 
@@ -62,7 +58,7 @@ def get_salary_hh(languages, pages_number):
             pages_number = min(pages_number, collected_data['pages'])
             vacancies += collected_data['items']
             page += 1
-        vacancies_processed, average_salary = predict_rub_salary_hh(vacancies)
+        vacancies_processed, average_salary = predict_rub_salary(vacancies, 'hh')
         language_stat = {
             'vacancies_found': collected_data['found'],
             'vacancies_processed': vacancies_processed,
@@ -91,21 +87,20 @@ def get_salary_sj(languages, key_sj, pages_number):
         more_page = True
         while page < pages_number and more_page:
             payload['page'] = page
-            response = requests.get(
-                url, headers=request_headers, params=payload)
+            response = requests.get(url, headers=request_headers, params=payload)
             response.raise_for_status()
             collected_data = response.json()
             more_page = collected_data['more']
             vacancies += collected_data['objects']
             page += 1
-        vacancies_processed, average_salary = predict_rub_salary_sj(vacancies)
+        vacancies_processed, average_salary = predict_rub_salary(vacancies, 'sj')
         language_stat = {
             'vacancies_found': collected_data['total'],
             'vacancies_processed': vacancies_processed,
             'average_salary': average_salary
         }
         languages_stat[language] = language_stat
-    return(languages_stat)
+    return languages_stat
 
 
 def print_table(languages_stat, title):
@@ -140,5 +135,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# , Javascript, Ruby, PHP, C++, C#, Scala
