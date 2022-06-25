@@ -6,16 +6,17 @@
 ### Как установить
 
 Python3 должен быть уже установлен. Затем используйте pip (или pip3, есть конфликт с Python2) для установки зависимостей:
-
-`pip install -r requirements.txt`
+```
+pip install -r requirements.txt
+```
 
 ### Переменные окружения
 Необходимо создать файл .env, в котором должны быть указаны значения следующие переменные:  
-
+```
 KEY_SUPERJOB = {KEY_SUPERJOB}  
 LANGUAGES = {language1, language2, ...,languageN}  
 PAGES_NUMBER = {PAGES_NUMBER}  
-
+```
 Пример:  
 ```
 KEY_SUPERJOB = v3.r.xxxxxxxxxxxxxxxxxxxxxx4
