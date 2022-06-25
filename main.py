@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from terminaltables import AsciiTable
 
 
-def predict_salary(salary_from, salary_to):
+def get_vacancy_salary(salary_from, salary_to):
     if salary_from and salary_to:
         return (salary_from + salary_to) / 2
     elif salary_to:
@@ -29,7 +29,7 @@ def predict_rub_salary(vacancies, website):
             is_currency_rub = (vacancy['currency'] == 'rub')
         else:
             continue
-        vacancy_salary = predict_salary(payment_from, payment_to)
+        vacancy_salary = get_vacancy_salary(payment_from, payment_to)
         if vacancy_salary and is_currency_rub:
             salary_sum += vacancy_salary
             vacancies_processed += 1
@@ -54,13 +54,13 @@ def get_salary_hh(languages, pages_number):
             payload['page'] = page
             response = requests.get(url, params=payload)
             response.raise_for_status()
-            collected_data = response.json()
-            pages_number = min(pages_number, collected_data['pages'])
-            vacancies += collected_data['items']
+            collected_payload = response.json()
+            pages_number = min(pages_number, collected_payload['pages'])
+            vacancies += collected_payload['items']
             page += 1
         vacancies_processed, average_salary = predict_rub_salary(vacancies, 'hh')
         language_stat = {
-            'vacancies_found': collected_data['found'],
+            'vacancies_found': collected_payload['found'],
             'vacancies_processed': vacancies_processed,
             'average_salary': average_salary
         }
@@ -68,10 +68,10 @@ def get_salary_hh(languages, pages_number):
     return languages_stat
 
 
-def get_salary_sj(languages, key_sj, pages_number):
+def get_salary_sj(languages, sj_key, pages_number):
     url = 'https://api.superjob.ru/2.0/vacancies/'
     request_headers = {
-        'X-Api-App-Id': key_sj
+        'X-Api-App-Id': sj_key
     }
     payload = {
         'keyword': 'программист Python',
@@ -89,13 +89,13 @@ def get_salary_sj(languages, key_sj, pages_number):
             payload['page'] = page
             response = requests.get(url, headers=request_headers, params=payload)
             response.raise_for_status()
-            collected_data = response.json()
-            more_page = collected_data['more']
-            vacancies += collected_data['objects']
+            collected_payload = response.json()
+            more_page = collected_payload['more']
+            vacancies += collected_payload['objects']
             page += 1
         vacancies_processed, average_salary = predict_rub_salary(vacancies, 'sj')
         language_stat = {
-            'vacancies_found': collected_data['total'],
+            'vacancies_found': collected_payload['total'],
             'vacancies_processed': vacancies_processed,
             'average_salary': average_salary
         }
@@ -104,7 +104,7 @@ def get_salary_sj(languages, key_sj, pages_number):
 
 
 def print_table(languages_stat, title):
-    table_data = [[
+    table_rows = [[
         'Язык программирования',
         'Вакансий найдено',
         'Вакансий обработано',
@@ -117,20 +117,20 @@ def print_table(languages_stat, title):
             language_stat['vacancies_processed'],
             language_stat['average_salary']
         ]
-        table_data.append(table_row)
-    table = AsciiTable(table_data, title)
+        table_rows.append(table_row)
+    table = AsciiTable(table_rows, title)
     print(table.table)
 
 
 def main():
     load_dotenv()
-    key_sj = os.getenv('KEY_SUPERJOB')
+    sj_key = os.getenv('SUPERJOB_KEY')
     languages = os.getenv('LANGUAGES', default='Python').split(', ')
     pages_number = int(os.getenv('PAGES_NUMBER', default=1000))
 
     print_table(get_salary_hh(languages, pages_number), 'HeadHunter-Moscow')
     print('')
-    print_table(get_salary_sj(languages, key_sj, pages_number), 'SuperJob-Moscow')
+    print_table(get_salary_sj(languages, sj_key, pages_number), 'SuperJob-Moscow')
 
 
 if __name__ == '__main__':
